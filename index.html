@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1f5fa">
+<title>주간계획</title>
+<meta name="application-name" content="주간계획">
+<meta name="apple-mobile-web-app-title" content="주간계획">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f1f5fa;
+  --surface: #fff;
+  --ink: #24364b;
+  --muted: #62748a;
+  --accent: #3f688f;
+  --soft: #e4edf7;
+  --line: #d7e0eb;
+  --raised: #edf2f8;
+  --gutter: 16px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: .875rem/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+h1, h2, p { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { display: flex; flex-direction: column; max-width: 640px; min-height: 100dvh; margin: auto; padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+.hero { padding: env(safe-area-inset-top) var(--gutter) 0; }
+.top { display: flex; align-items: center; gap: 5px; min-height: 52px; }
+.top h1 { font-size: 1.125rem; letter-spacing: -.035em; }
+.icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.375rem;
+}
+#menu { margin-left: -10px; }
+.hamburger { width: 16px; height: 2px; border-radius: 2px; background: currentColor; box-shadow: 0 -5px currentColor, 0 5px currentColor; }
+nav { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px 8px; }
+.week { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; text-align: center; }
+.week button { width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--accent); font-size: 1.25rem; }
+.week strong, .event-time, #tally { font-variant-numeric: tabular-nums; }
+.days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.day {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 58px;
+  padding: 3px 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: .75rem;
+  line-height: 1.25;
+}
+.day strong { font-size: .9375rem; color: var(--ink); margin-block: 1px; }
+.day[aria-current=date] { border-color: #a3b9cf; }
+.day[aria-pressed=true] { background: var(--soft); border-color: #87a7c5; color: #355e87; }
+.count { height: 13px; font-size: .6875rem; }
+.content { padding: 10px var(--gutter) 0; }
+.progress { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; margin-bottom: 14px; color: var(--muted); font-size: .75rem; }
+progress { display: block; width: 100%; height: 4px; appearance: none; border: 0; border-radius: 4px; overflow: hidden; background: var(--line); accent-color: var(--accent); }
+progress::-webkit-progress-bar { background: var(--line); }
+progress::-webkit-progress-value { background: var(--accent); }
+progress::-moz-progress-bar { background: var(--accent); }
+.section-head h2 { font-size: .9375rem; letter-spacing: -.025em; }
+.tasks { padding: 0; margin: 7px 0 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+.task { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; min-height: 49px; }
+.task + .task { border-top: 1px solid var(--line); }
+.check, .task-info { min-height: 48px; border: 0; background: transparent; }
+.check { display: grid; place-items: center; padding: 0; }
+.checkbox-icon { display: grid; place-items: center; width: 16px; height: 16px; border: 1px solid #8ca2b8; border-radius: 5px; }
+.check[aria-pressed=true] .checkbox-icon { background: var(--accent); border-color: var(--accent); }
+.check[aria-pressed=true] .checkbox-icon::after { content: ""; width: 7px; height: 4px; border: solid white; border-width: 0 0 2px 2px; transform: translateY(-1px) rotate(-45deg); }
+.task-info { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 7px; text-align: left; padding: 8px 12px 8px 0; }
+.task-info strong { min-width: 0; overflow-wrap: anywhere; font-size: .875rem; font-weight: 600; line-height: 1.35; }
+.done strong { text-decoration: line-through; color: var(--muted); }
+.event-time { color: var(--muted); font-size: .75rem; white-space: nowrap; }
+.tag { display: inline-block; align-self: center; max-width: 78px; padding: 2px 6px; border-radius: 5px; font-size: .6875rem; line-height: 1.4; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { padding: 18px 12px; text-align: center; color: var(--muted); }
+.copyright { margin: auto var(--gutter) 0; padding-top: 14px; text-align: center; color: var(--muted); font-size: .6875rem; }
+.dock { position: fixed; inset: auto 0 0; padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); }
+.dock button { display: block; width: 100%; max-width: 608px; margin-inline: auto; }
+.primary, .secondary, .delete { min-height: 44px; padding: 0 12px; border-radius: 8px; }
+.primary { border: 1px solid transparent; background: #486e96; color: white; font-weight: 700; }
+.secondary { border: 1px solid var(--line); background: var(--raised); }
+.delete { border: 0; background: none; color: #a44f4f; }
+dialog { width: min(calc(100% - 24px), 420px); max-height: calc(100dvh - 24px); border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 12px 36px #24364b26; }
+dialog::backdrop { background: #24364b63; }
+.dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.dialog-head h2, #editor-title { font-size: 1.0625rem; letter-spacing: -.025em; }
+.dialog-head .icon { margin: -6px -6px -6px 0; }
+form { display: grid; gap: 12px; }
+form label, .field { min-width: 0; display: grid; grid-template-rows: 18px 44px; gap: 4px; }
+form label { color: var(--muted); font-size: .8125rem; font-weight: 600; line-height: 18px; }
+.field label { display: block; }
+.fields, .actions, .color-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: end; }
+input, select, .time-trigger {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 400;
+}
+input[type=date], select { appearance: none; }
+input[type=date]::-webkit-date-and-time-value { text-align: left; }
+input[type=date]::-webkit-calendar-picker-indicator { margin: 0; padding: 0; }
+select { padding-right: 30px; background-image: linear-gradient(45deg, transparent 50%, #62748a 50%), linear-gradient(135deg, #62748a 50%, transparent 50%); background-position: right 15px center, right 10px center; background-size: 5px 5px; background-repeat: no-repeat; }
+.time-trigger { text-align: left; }
+input[type=color] { padding: 5px; }
+.color-fields { grid-template-columns: minmax(0, 1fr) 72px; }
+.category-list { padding: 0; list-style: none; margin: 0 0 12px; }
+.category-row { display: flex; align-items: center; gap: 6px; min-height: 49px; border-bottom: 1px solid var(--line); }
+.category-row .tag { margin-right: auto; max-width: none; }
+.category-row button { font-size: .8125rem; }
+.wheel-title, .wheels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); text-align: center; }
+.wheel-title { font-size: .75rem; color: var(--muted); margin-top: 12px; }
+.wheels { position: relative; }
+.wheels::before { content: ""; position: absolute; inset: 88px 0 auto; height: 44px; border-radius: 8px; background: var(--raised); pointer-events: none; }
+.wheel { position: relative; height: 220px; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; padding: 88px 0; }
+.wheel button { display: block; width: 100%; height: 44px; scroll-snap-align: center; background: transparent; border: 0; color: var(--muted); font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.wheel button[aria-pressed=true] { color: var(--ink); font-size: 1.375rem; font-weight: 700; }
+.wheel-actions { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.notice { margin-top: 8px; color: #a44f4f; font-size: .8125rem; }
+#sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(82vw, 300px);
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border-radius: 0 14px 14px 0;
+  padding: max(16px, env(safe-area-inset-top)) 14px 16px;
+}
+.menu-items { display: grid; gap: 6px; }
+.menu-items button { width: 100%; text-align: left; background: var(--raised); }
+.release-list { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.release { padding: 14px; }
+.release + .release { border-top: 1px solid var(--line); }
+.release-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.release h3 { margin: 0; font-size: 1rem; }
+.release time { color: var(--muted); font-size: .75rem; }
+.release ul { margin: 9px 0 0; padding-left: 18px; }
+.release li + li { margin-top: 4px; }
+.app-icon { width: 26px; height: 26px; border-radius: 7px; }
+@media (max-width: 360px) {
+  :root { --gutter: 12px; }
+  .task-info { gap: 5px; padding-right: 8px; }
+  .tag { max-width: 64px; }
+  input[type=date] { padding-inline: 5px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="top"><button class="icon" id="menu" type="button" aria-label="메뉴 열기" aria-haspopup="dialog"><span class="hamburger" aria-hidden="true"></span></button><img class="app-icon" src="./icon-192.png" alt=""><h1>주간계획</h1></div>
+    <nav aria-label="주간 달력">
+      <div class="week">
+        <button id="prev" type="button" aria-label="이전 주">‹</button>
+        <strong id="range" aria-live="polite"></strong>
+        <button id="next" type="button" aria-label="다음 주">›</button>
+      </div>
+      <div class="days" id="days"></div>
+    </nav>
+  </header>
+  <section class="content" aria-labelledby="selected">
+    <div class="progress">
+      <label for="progress">주간 진행률</label>
+      <progress id="progress" max="1" value="0"></progress>
+      <span id="tally"></span>
+    </div>
+    <div class="section-head"><h2 id="selected"></h2></div>
+    <ul class="tasks" id="tasks"></ul>
+    <p class="notice" id="notice" role="status" hidden></p>
+  </section>
+  <p class="copyright">© 2026 Daisy. All rights reserved.</p>
+  <footer class="dock"><button class="primary" id="add" type="button">＋ 일정 추가</button></footer>
+</main>
+<dialog id="editor" aria-labelledby="editor-title">
+  <form id="form">
+    <h2 id="editor-title">일정 추가</h2>
+    <label>일정 이름<input id="title" required maxlength="80" placeholder="예: 영어 회화 복습" autofocus></label>
+    <div class="fields">
+      <label>날짜<input id="date" type="date" required></label>
+      <div class="field"><label for="pick-time">시간</label><button class="time-trigger" id="pick-time" type="button">시간 미정</button></div>
+    </div>
+    <label>카테고리<select id="category"></select></label>
+    <div class="actions"><button class="secondary" id="cancel" type="button">취소</button><button class="primary" type="submit">저장</button></div>
+    <button class="delete" id="remove" type="button" hidden>일정 삭제</button>
+  </form>
+</dialog>
+<dialog id="sidebar" aria-labelledby="sidebar-heading">
+  <div class="dialog-head"><h2 id="sidebar-heading">주간계획</h2><button class="icon" id="close-menu" type="button" aria-label="메뉴 닫기">×</button></div>
+  <div class="menu-items">
+    <button class="secondary" id="manage-categories" type="button">카테고리 관리</button>
+    <button class="secondary" id="show-updates" type="button">업데이트 내역</button>
+  </div>
+</dialog>
+<dialog id="updates-dialog" aria-labelledby="updates-heading">
+  <div class="dialog-head"><h2 id="updates-heading">업데이트 내역</h2><button class="icon" id="close-updates" type="button" aria-label="닫기">×</button></div>
+  <div class="release-list">
+    <article class="release">
+      <div class="release-heading"><h3>1.0.0</h3><time datetime="2026-11-21">2026.11.21</time></div>
+      <ul>
+        <li>주간 달력, 요일별 일정 목록, 주간 진행률</li>
+        <li>일정 추가·수정·삭제와 완료 체크, 10분 단위 시간 선택</li>
+        <li>카테고리 추가·수정·삭제와 칩 색상 설정</li>
+        <li>홈 화면에 추가할 수 있는 앱 이름과 아이콘</li>
+      </ul>
+    </article>
+  </div>
+</dialog>
+<dialog id="category-dialog" aria-labelledby="category-heading">
+  <div class="dialog-head"><h2 id="category-heading">카테고리 관리</h2><button class="icon" id="close-categories" type="button" aria-label="닫기">×</button></div>
+  <ul class="category-list" id="category-list"></ul>
+  <form id="category-form">
+    <div class="color-fields"><label>이름<input id="category-name" required maxlength="18" placeholder="예: 운동"></label><label>칩 색상<input id="category-color" type="color" value="#eee7ff"></label></div>
+    <div class="actions"><button class="secondary" id="reset-category" type="button">입력 초기화</button><button class="primary" id="save-category" type="submit">카테고리 추가</button></div>
+  </form>
+</dialog>
+<dialog id="time-dialog" aria-labelledby="time-heading">
+  <div class="dialog-head"><h2 id="time-heading">시간 선택</h2><button class="icon" id="close-time" type="button" aria-label="닫기">×</button></div>
+  <div class="wheel-title" aria-hidden="true"><span>오전·오후</span><span>시</span><span>분</span></div>
+  <div class="wheels" id="wheels"></div>
+  <div class="actions wheel-actions"><button class="secondary" id="clear-time" type="button">시간 미정</button><button class="primary" id="confirm-time" type="button">확인</button></div>
+</dialog>
+<script>
+const byId = id => document.getElementById(id);
+const storageKey = 'after-work-planner-v1';
+const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+const categoryKey = 'after-work-planner-categories-v1';
+const uncategorized = '미분류';
+let categories = [
+  { name: '공부', color: '#eee7ff' },
+  { name: '약속', color: '#ffe9e0' },
+  { name: '기타', color: '#def3ee' }
+];
+const dateKey = date => [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+  .map((part, index) => String(part).padStart(index ? 2 : 4, '0')).join('-');
+function shift(date, offset) {
+  const shifted = new Date(date);
+  shifted.setDate(shifted.getDate() + offset);
+  return shifted;
+}
+const monday = date => shift(date, -((date.getDay() + 6) % 7));
+const shortDate = date => (date.getMonth() + 1) + '.' + date.getDate();
+let selected = new Date();
+let editingId = null;
+let editingCategory = null;
+let eventTime = '';
+let entries = [
+  { id: 'sample-1', title: '영어 회화 복습', time: '19:30', category: '공부', done: true },
+  { id: 'sample-2', title: '친구와 저녁 약속', time: '20:30', category: '약속', done: false },
+  { id: 'sample-3', title: '다음 주 계획 정리', time: '21:00', category: '기타', done: false }
+].map(entry => ({ ...entry, date: dateKey(selected) }));
+function storageWarning() {
+  byId('notice').hidden = false;
+  byId('notice').textContent = '브라우저 저장 공간에 접근할 수 없어 새로고침하면 변경 사항이 사라질 수 있어요.';
+}
+function persist() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(entries));
+  } catch {
+    storageWarning();
+  }
+}
+try {
+  const stored = localStorage.getItem(storageKey);
+  if (stored === null) persist();
+  else {
+    const saved = JSON.parse(stored);
+    if (Array.isArray(saved)) entries = saved;
+  }
+  const savedCategories = JSON.parse(localStorage.getItem(categoryKey));
+  if (Array.isArray(savedCategories)) categories = savedCategories;
+  for (const entry of entries) {
+    if (!categories.some(category => category.name === entry.category)) entry.category = uncategorized;
+  }
+} catch {
+  storageWarning();
+}
+function element(tag, className, content) {
+  const item = document.createElement(tag);
+  item.className = className;
+  if (content !== undefined) item.textContent = content;
+  return item;
+}
+function chip(name) {
+  const item = element('span', 'tag', name);
+  const color = categories.find(category => category.name === name)?.color ?? '#e9e8ee';
+  const channels = color.slice(1).match(/../g).map(channel => {
+    const value = parseInt(channel, 16) / 255;
+    return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+  });
+  const luminance = channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+  item.style.backgroundColor = color;
+  item.style.color = luminance > .179 ? '#000' : '#fff';
+  return item;
+}
+function render() {
+  const start = monday(selected);
+  const end = shift(start, 6);
+  const selectedKey = dateKey(selected);
+  const todayKey = dateKey(new Date());
+  const weekEntries = entries.filter(entry => entry.date >= dateKey(start) && entry.date <= dateKey(end));
+  const completed = weekEntries.filter(entry => entry.done).length;
+  const endLabel = start.getFullYear() === end.getFullYear() ? shortDate(end) : end.getFullYear() + '. ' + shortDate(end);
+  byId('range').textContent = start.getFullYear() + '. ' + shortDate(start) + ' – ' + endLabel;
+  byId('days').replaceChildren(...Array.from({ length: 7 }, (_, index) => {
+    const day = shift(start, index);
+    const key = dateKey(day);
+    const count = weekEntries.filter(entry => entry.date === key).length;
+    const button = element('button', 'day');
+    button.type = 'button';
+    button.setAttribute('aria-pressed', String(key === selectedKey));
+    button.setAttribute('aria-label', key + ' ' + weekdays[day.getDay()] + '요일, 일정 ' + count + '개');
+    if (key === todayKey) button.setAttribute('aria-current', 'date');
+    button.append(element('span', '', weekdays[day.getDay()]), element('strong', '', day.getDate()), element('span', 'count', count ? count + '개' : ''));
+    button.addEventListener('click', () => { selected = day; render(); byId('days').children[index].focus(); });
+    return button;
+  }));
+  byId('progress').max = weekEntries.length || 1;
+  byId('progress').value = completed;
+  byId('tally').textContent = completed + ' / ' + weekEntries.length + ' 완료';
+  byId('selected').textContent = (selected.getMonth() + 1) + '월 ' + selected.getDate() + '일 ' + weekdays[selected.getDay()] + '요일';
+  const dayEntries = weekEntries.filter(entry => entry.date === selectedKey)
+    .sort((first, second) => (first.time || '99:99').localeCompare(second.time || '99:99'));
+  byId('tasks').replaceChildren(...dayEntries.map(entry => {
+    const task = element('li', 'task' + (entry.done ? ' done' : ''));
+    const check = element('button', 'check');
+    check.type = 'button';
+    check.setAttribute('aria-label', entry.title + ' 완료');
+    check.setAttribute('aria-pressed', String(entry.done));
+    check.append(element('span', 'checkbox-icon'));
+    check.addEventListener('click', () => {
+      entry.done = !entry.done;
+      persist();
+      render();
+      byId('tasks').children[dayEntries.indexOf(entry)].firstElementChild.focus();
+    });
+    const info = element('button', 'task-info');
+    info.type = 'button';
+    info.setAttribute('aria-label', entry.title + ' 수정');
+    const time = element(entry.time ? 'time' : 'span', 'event-time', entry.time || '시간 미정');
+    info.append(chip(entry.category), element('strong', '', entry.title), time);
+    info.addEventListener('click', () => openEditor(entry));
+    task.append(check, info);
+    return task;
+  }));
+  if (!dayEntries.length) byId('tasks').append(element('li', 'empty', '아직 일정이 없어요.'));
+}
+const editor = byId('editor');
+function openEditor(entry) {
+  editingId = entry?.id ?? null;
+  byId('editor-title').textContent = entry ? '일정 수정' : '일정 추가';
+  byId('title').value = entry?.title ?? '';
+  byId('title').setCustomValidity('');
+  byId('date').value = entry?.date ?? dateKey(selected);
+  setTime(entry?.time ?? '');
+  byId('category').replaceChildren(...[...categories.map(category => category.name), uncategorized].map(name => element('option', '', name)));
+  byId('category').value = entry?.category ?? categories[0]?.name ?? uncategorized;
+  byId('remove').hidden = !entry;
+  editor.showModal();
+}
+byId('prev').onclick = () => { selected = shift(selected, -7); render(); };
+byId('next').onclick = () => { selected = shift(selected, 7); render(); };
+byId('add').onclick = () => openEditor();
+byId('cancel').onclick = () => editor.close();
+byId('title').oninput = () => byId('title').setCustomValidity('');
+byId('form').onsubmit = event => {
+  event.preventDefault();
+  const title = byId('title').value.trim();
+  if (!title) {
+    byId('title').setCustomValidity('일정 이름을 입력해 주세요.');
+    byId('title').reportValidity();
+    return;
+  }
+  const date = byId('date').value;
+  const details = { title, date, time: eventTime, category: byId('category').value };
+  const existing = entries.find(entry => entry.id === editingId);
+  if (existing) Object.assign(existing, details);
+  else entries.push({ id: String(Date.now()) + Math.random(), ...details, done: false });
+  selected = new Date(date + 'T12:00:00');
+  persist();
+  editor.close();
+  render();
+  byId('add').focus();
+};
+byId('remove').onclick = () => {
+  if (!window.confirm('이 일정을 삭제할까요?')) return;
+  entries = entries.filter(entry => entry.id !== editingId);
+  persist();
+  editor.close();
+  render();
+  byId('add').focus();
+};
+const categoryDialog = byId('category-dialog');
+function resetCategory() {
+  editingCategory = null;
+  byId('category-form').reset();
+  byId('category-name').setCustomValidity('');
+  byId('save-category').textContent = '카테고리 추가';
+}
+function saveCategories() {
+  try {
+    localStorage.setItem(categoryKey, JSON.stringify(categories));
+  } catch {
+    storageWarning();
+  }
+  persist();
+  resetCategory();
+  renderCategories();
+  render();
+}
+function renderCategories() {
+  byId('category-list').replaceChildren(...categories.map(category => {
+    const row = element('li', 'category-row');
+    const edit = element('button', 'secondary', '수정');
+    const remove = element('button', 'delete', '삭제');
+    edit.setAttribute('aria-label', category.name + ' 수정');
+    remove.setAttribute('aria-label', category.name + ' 삭제');
+    edit.onclick = () => {
+      editingCategory = category;
+      byId('category-name').value = category.name;
+      byId('category-name').setCustomValidity('');
+      byId('category-color').value = category.color;
+      byId('save-category').textContent = '변경 저장';
+      byId('category-name').focus();
+    };
+    remove.onclick = () => {
+      if (!window.confirm('카테고리를 삭제할까요? 기존 일정은 미분류로 이동합니다.')) return;
+      categories = categories.filter(item => item !== category);
+      for (const entry of entries) {
+        if (entry.category === category.name) entry.category = uncategorized;
+      }
+      saveCategories();
+      byId('category-name').focus();
+    };
+    row.append(chip(category.name), edit, remove);
+    return row;
+  }));
+}
+const sidebar = byId('sidebar');
+const updatesDialog = byId('updates-dialog');
+byId('menu').onclick = () => sidebar.showModal();
+byId('close-menu').onclick = () => sidebar.close();
+byId('manage-categories').onclick = () => {
+  sidebar.close();
+  resetCategory();
+  renderCategories();
+  categoryDialog.showModal();
+};
+byId('show-updates').onclick = () => { sidebar.close(); updatesDialog.showModal(); };
+byId('close-updates').onclick = () => updatesDialog.close();
+for (const dialog of [categoryDialog, updatesDialog]) {
+  dialog.addEventListener('close', () => byId('menu').focus());
+}
+byId('close-categories').onclick = () => categoryDialog.close();
+byId('reset-category').onclick = resetCategory;
+byId('category-name').oninput = () => byId('category-name').setCustomValidity('');
+byId('category-form').onsubmit = event => {
+  event.preventDefault();
+  const input = byId('category-name');
+  const name = input.value.trim();
+  if (!name || name === uncategorized || categories.some(category => category !== editingCategory && category.name === name)) {
+    input.setCustomValidity('사용 가능한 카테고리 이름을 입력해 주세요.');
+    input.reportValidity();
+    return;
+  }
+  const color = byId('category-color').value;
+  if (editingCategory) {
+    for (const entry of entries) {
+      if (entry.category === editingCategory.name) entry.category = name;
+    }
+    Object.assign(editingCategory, { name, color });
+  } else {
+    categories.push({ name, color });
+  }
+  saveCategories();
+  input.focus();
+};
+const timeDialog = byId('time-dialog');
+const wheelValues = [
+  ['오전', '오후'],
+  Array.from({ length: 12 }, (_, index) => String(index + 1)),
+  ['00', '10', '20', '30', '40', '50']
+];
+const wheelLabels = ['오전·오후', '시', '분'];
+function setTime(value) {
+  eventTime = value;
+  byId('pick-time').textContent = value || '시간 미정';
+}
+function wheelIndex(wheel) {
+  return Math.round(wheel.scrollTop / 44);
+}
+function buildWheel(values, column) {
+  const wheel = element('div', 'wheel');
+  wheel.setAttribute('role', 'group');
+  wheel.setAttribute('aria-label', wheelLabels[column]);
+  function mark() {
+    Array.from(wheel.children).forEach((button, index) => button.setAttribute('aria-pressed', String(index === wheelIndex(wheel))));
+  }
+  values.forEach((value, index) => {
+    const button = element('button', '', value);
+    button.type = 'button';
+    button.onclick = () => { wheel.scrollTop = index * 44; mark(); };
+    wheel.append(button);
+  });
+  wheel.addEventListener('scroll', mark);
+  return { wheel, mark };
+}
+byId('pick-time').onclick = () => {
+  const [hour, minute] = (eventTime || '18:00').split(':').map(Number);
+  const indices = [Number(hour >= 12), (hour % 12 || 12) - 1, Math.min(5, Math.round(minute / 10))];
+  const wheels = wheelValues.map(buildWheel);
+  byId('wheels').replaceChildren(...wheels.map(({ wheel }) => wheel));
+  timeDialog.showModal();
+  wheels.forEach(({ wheel, mark }, index) => { wheel.scrollTop = indices[index] * 44; mark(); });
+  byId('close-time').focus({ preventScroll: true });
+};
+byId('close-time').onclick = () => timeDialog.close();
+byId('clear-time').onclick = () => { setTime(''); timeDialog.close(); };
+byId('confirm-time').onclick = () => {
+  const [period, hour, minute] = Array.from(byId('wheels').children, wheelIndex);
+  const hour24 = (hour + 1) % 12 + period * 12;
+  setTime(String(hour24).padStart(2, '0') + ':' + wheelValues[2][minute]);
+  timeDialog.close();
+};
+render();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('./sw.js').catch(error => console.warn('앱 캐시 등록 실패', error));
+}
+</script>
+</body>
+</html>
