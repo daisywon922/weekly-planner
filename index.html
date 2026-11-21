@@ -8,9 +8,7 @@
 <meta name="application-name" content="주간계획">
 <meta name="apple-mobile-web-app-title" content="주간계획">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
 :root {
   color-scheme: light;
@@ -35,10 +33,13 @@ body {
 h1, h2, p { margin: 0; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; touch-action: manipulation; }
-button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus { outline: none; }
+button:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+button.icon:focus-visible, .week button:focus-visible, .check:focus-visible { background: var(--soft); border-radius: 50%; }
+input:not([type=date]):focus-visible, select:focus-visible { background-color: var(--raised); }
 main { display: flex; flex-direction: column; max-width: 640px; min-height: 100dvh; margin: auto; padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 .hero { padding: env(safe-area-inset-top) var(--gutter) 0; }
-.top { display: flex; align-items: center; gap: 5px; min-height: 52px; }
+.top { display: flex; align-items: center; gap: 5px; min-height: 54px; margin-bottom: 4px; }
 .top h1 { font-size: 1.125rem; letter-spacing: -.035em; }
 .icon {
   display: grid;
@@ -77,14 +78,27 @@ nav { background: var(--surface); border: 1px solid var(--line); border-radius: 
 .day[aria-pressed=true] { background: var(--soft); border-color: #87a7c5; color: #355e87; }
 .day-rate { height: 13px; font-size: .6875rem; font-variant-numeric: tabular-nums; }
 .day { grid-template-rows: auto auto 13px; }
-.content { padding: 10px var(--gutter) 0; }
-.progress { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; margin-bottom: 14px; color: var(--muted); font-size: .75rem; }
+.content { padding: 15px var(--gutter) 0; }
+.progress { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; margin-bottom: 19px; color: var(--muted); font-size: .75rem; }
 progress { display: block; width: 100%; height: 4px; appearance: none; border: 0; border-radius: 4px; overflow: hidden; background: var(--line); accent-color: var(--accent); }
 progress::-webkit-progress-bar { background: var(--line); }
 progress::-webkit-progress-value { background: var(--accent); }
 progress::-moz-progress-bar { background: var(--accent); }
+.section-head { display: flex; align-items: center; justify-content: space-between; min-height: 36px; }
 .section-head h2 { font-size: .9375rem; letter-spacing: -.025em; }
-.tasks { padding: 0; margin: 7px 0 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+#list-menu { height: 36px; margin-right: -5px; font-size: 1.125rem; }
+.move-options { display: grid; }
+.move-options button { min-height: 48px; padding: 0 2px; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; }
+.move-options button:disabled { color: var(--muted); opacity: .65; cursor: default; }
+.move-options button:last-child { border-bottom: 0; }
+.move-status { color: var(--muted); font-size: .8125rem; }
+.move-status { margin-top: 10px; }
+.move-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; text-align: center; margin-bottom: 12px; }
+.move-days > span { color: var(--muted); font-size: .75rem; }
+.move-days button { min-height: 40px; padding: 0; border: 0; border-radius: 8px; background: transparent; }
+.move-days button[aria-pressed=true] { background: var(--soft); color: var(--accent); font-weight: 700; }
+.move-days button:disabled { color: var(--muted); text-decoration: line-through; opacity: .6; cursor: default; }
+.tasks { padding: 0; margin: 10px 0 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
 .task { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; min-height: 49px; }
 .task + .task { border-top: 1px solid var(--line); }
 .check, .task-info { min-height: 48px; border: 0; background: transparent; }
@@ -110,13 +124,12 @@ dialog::backdrop { background: #24364b63; }
 .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .dialog-head h2, #editor-title { font-size: 1.0625rem; letter-spacing: -.025em; }
 .dialog-head .icon { margin: -6px -6px -6px 0; }
-.dialog-head .icon:focus:not(:focus-visible) { outline: none; }
 #form .dialog-head { margin-bottom: 0; }
 .date-control { position: relative; display: flex; align-items: center; }
 .date-control input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .date-control input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: auto; height: auto; cursor: pointer; }
 .date-value { display: flex; align-items: center; width: 100%; height: 44px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-size: .875rem; font-weight: 400; white-space: nowrap; }
-.date-control:focus-within .date-value { outline: 2px solid var(--accent); outline-offset: 2px; }
+.date-control:has(input:focus-visible) .date-value { background: var(--raised); }
 form { display: grid; gap: 12px; }
 form label, .field { min-width: 0; display: grid; grid-template-rows: 18px 44px; gap: 4px; }
 form label { color: var(--muted); font-size: .8125rem; font-weight: 600; line-height: 18px; }
@@ -169,8 +182,9 @@ input[type=color] { padding: 5px; }
   border-radius: 0 14px 14px 0;
   padding: max(16px, env(safe-area-inset-top)) 14px 16px;
 }
-.menu-items { display: grid; gap: 6px; }
-.menu-items button { width: 100%; text-align: left; background: var(--raised); }
+.menu-items { display: grid; }
+.menu-items button { width: 100%; min-height: 48px; padding: 0 2px; border: 0; border-radius: 0; text-align: left; background: transparent; font-weight: 400; }
+.menu-items button + button { border-top: 1px solid var(--line); }
 .release-list { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .release { padding: 14px; }
 .release + .release { border-top: 1px solid var(--line); }
@@ -180,6 +194,35 @@ input[type=color] { padding: 5px; }
 .release ul { margin: 9px 0 0; padding-left: 18px; }
 .release li + li { margin-top: 4px; }
 .app-icon { width: 26px; height: 26px; border-radius: 7px; }
+@media (prefers-reduced-motion: no-preference) {
+  button { transition: background-color 140ms ease, color 140ms ease; }
+  @supports (transition-behavior: allow-discrete) {
+    dialog {
+      --dialog-offset: translateY(10px) scale(.988);
+      opacity: 0;
+      transform: var(--dialog-offset);
+      transition: opacity 180ms ease, transform 220ms cubic-bezier(.2,.7,.25,1),
+        display 220ms allow-discrete, overlay 220ms allow-discrete;
+    }
+    #sidebar { --dialog-offset: translateX(-100%); }
+    dialog[open] { opacity: 1; transform: none; }
+    dialog::backdrop {
+      background-color: transparent;
+      transition: background-color 200ms ease, display 220ms allow-discrete, overlay 220ms allow-discrete;
+    }
+    dialog[open]::backdrop { background-color: #24364b63; }
+    @starting-style {
+      dialog[open] { opacity: 0; transform: var(--dialog-offset); }
+      dialog[open]::backdrop { background-color: transparent; }
+    }
+  }
+  @supports not (transition-behavior: allow-discrete) {
+    dialog[open] { animation: modal-in 180ms ease-out; }
+    #sidebar[open] { animation: sidebar-in 220ms ease-out; }
+    @keyframes modal-in { from { opacity: 0; transform: translateY(10px); } }
+    @keyframes sidebar-in { from { transform: translateX(-100%); } }
+  }
+}
 @media (max-width: 360px) {
   :root { --gutter: 12px; }
   .task-info { gap: 5px; padding-right: 8px; }
@@ -187,6 +230,8 @@ input[type=color] { padding: 5px; }
   input[type=date] { padding-inline: 5px; }
 }
 </style>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 </head>
 <body>
 <main>
@@ -207,13 +252,32 @@ input[type=color] { padding: 5px; }
       <progress id="progress" max="1" value="0"></progress>
       <span id="tally"></span>
     </div>
-    <div class="section-head"><h2 id="selected"></h2></div>
+    <div class="section-head"><h2 id="selected"></h2><button class="icon" id="list-menu" type="button" aria-label="체크리스트 더보기" aria-haspopup="dialog">•••</button></div>
     <ul class="tasks" id="tasks"></ul>
+    <p class="move-status" id="move-status" role="status"></p>
     <p class="notice" id="notice" role="status" hidden></p>
   </section>
   <p class="copyright">© 2026 Daisy. All rights reserved.</p>
   <footer class="dock"><button class="primary" id="add" type="button">＋ 일정 추가</button></footer>
 </main>
+<dialog id="list-dialog" aria-labelledby="list-heading">
+  <div class="dialog-head"><h2 id="list-heading" tabindex="-1" autofocus>체크리스트 메뉴</h2><button class="icon" id="close-list" type="button" aria-label="닫기">×</button></div>
+  <div class="move-options">
+    <button id="move-tomorrow" type="button">미완료 할 일 내일 하기</button>
+    <button id="move-today" type="button">미완료 할 일 오늘 하기</button>
+    <button id="move-other" type="button">미완료 할 일 다른 날 하기</button>
+  </div>
+</dialog>
+<dialog id="move-dialog" aria-labelledby="move-heading">
+  <div class="dialog-head"><h2 id="move-heading" tabindex="-1" autofocus>이동할 날짜 선택</h2><button class="icon" id="close-move" type="button" aria-label="닫기">×</button></div>
+  <div class="week">
+    <button id="move-prev" type="button" aria-label="이전 달">‹</button>
+    <strong id="move-month" aria-live="polite"></strong>
+    <button id="move-next" type="button" aria-label="다음 달">›</button>
+  </div>
+  <div class="move-days" id="move-days"></div>
+  <div class="actions"><button class="secondary" id="cancel-move" type="button">취소</button><button class="primary" id="confirm-move" type="button" disabled>이동</button></div>
+</dialog>
 <dialog id="editor" aria-labelledby="editor-title">
   <form id="form">
     <div class="dialog-head"><h2 id="editor-title" tabindex="-1" autofocus>일정 추가</h2><button class="icon" id="close-editor" type="button" aria-label="닫기">×</button></div>
@@ -230,13 +294,20 @@ input[type=color] { padding: 5px; }
 <dialog id="sidebar" aria-labelledby="sidebar-heading">
   <div class="dialog-head"><h2 id="sidebar-heading" tabindex="-1" autofocus>주간계획</h2><button class="icon" id="close-menu" type="button" aria-label="메뉴 닫기">×</button></div>
   <div class="menu-items">
-    <button class="secondary" id="manage-categories" type="button">카테고리 관리</button>
-    <button class="secondary" id="show-updates" type="button">업데이트 내역</button>
+    <button id="manage-categories" type="button">카테고리 관리</button>
+    <button id="show-updates" type="button">업데이트 내역</button>
   </div>
 </dialog>
 <dialog id="updates-dialog" aria-labelledby="updates-heading">
   <div class="dialog-head"><h2 id="updates-heading" tabindex="-1" autofocus>업데이트 내역</h2><button class="icon" id="close-updates" type="button" aria-label="닫기">×</button></div>
   <div class="release-list">
+    <article class="release">
+      <div class="release-heading"><h3>1.0.3</h3><time datetime="2026-11-22">2026.11.22</time></div>
+      <ul>
+        <li>체크리스트에서 미완료 할 일을 오늘, 내일 또는 지정한 날짜로 이동</li>
+        <li>모달과 달력 전환 효과, 메뉴와 섹션 간격 개선</li>
+      </ul>
+    </article>
     <article class="release">
       <div class="release-heading"><h3>1.0.2</h3><time datetime="2026-11-21">2026.11.21</time></div>
       <ul>
@@ -359,6 +430,20 @@ function chip(name) {
   item.style.color = luminance > .179 ? '#000' : '#fff';
   return item;
 }
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let calendarMotion = [];
+function animateCalendarChange(weekDirection = 0) {
+  calendarMotion.forEach(animation => animation.cancel());
+  calendarMotion = [];
+  if (reducedMotion.matches || !byId('tasks').animate) return;
+  const elements = [byId('selected'), byId('tasks')];
+  if (weekDirection) elements.push(byId('days'), byId('range'), byId('progress'));
+  const offset = weekDirection ? 'translateX(' + weekDirection * 6 + 'px)' : 'translateY(4px)';
+  calendarMotion = elements.map(element => element.animate(
+    [{ opacity: .6, transform: offset }, { opacity: 1, transform: 'none' }],
+    { duration: 180, easing: 'ease-out' }
+  ));
+}
 function render() {
   const start = monday(selected);
   const end = shift(start, 6);
@@ -380,7 +465,14 @@ function render() {
     if (key === todayKey) button.setAttribute('aria-current', 'date');
     button.append(element('span', '', weekdays[day.getDay()]), element('strong', '', day.getDate()));
     if (rate) button.append(element('span', 'day-rate', rate));
-    button.addEventListener('click', () => { selected = day; render(); byId('days').children[index].focus(); });
+    button.addEventListener('click', () => {
+      if (key === selectedKey) return;
+      selected = day;
+      byId('move-status').textContent = '';
+      render();
+      byId('days').children[index].focus({ preventScroll: true });
+      animateCalendarChange();
+    });
     return button;
   }));
   byId('progress').max = weekEntries.length || 1;
@@ -429,8 +521,14 @@ function openEditor(entry) {
   byId('remove').hidden = !entry;
   editor.showModal();
 }
-byId('prev').onclick = () => { selected = shift(selected, -7); render(); };
-byId('next').onclick = () => { selected = shift(selected, 7); render(); };
+function moveWeek(direction) {
+  selected = shift(selected, direction * 7);
+  byId('move-status').textContent = '';
+  render();
+  animateCalendarChange(direction);
+}
+byId('prev').onclick = () => moveWeek(-1);
+byId('next').onclick = () => moveWeek(1);
 byId('add').onclick = () => openEditor();
 byId('cancel').onclick = () => editor.close();
 byId('close-editor').onclick = () => editor.close();
@@ -595,9 +693,94 @@ byId('confirm-time').onclick = () => {
   setTime(String(hour24).padStart(2, '0') + ':' + wheelValues[2][minute]);
   timeDialog.close();
 };
+const listDialog = byId('list-dialog');
+const moveDialog = byId('move-dialog');
+let moveMonth;
+let destination;
+
+function pendingPlans() {
+  const source = dateKey(selected);
+  return entries.filter(entry => entry.date === source && !entry.done);
+}
+
+function movePendingPlans(date) {
+  const target = dateKey(date);
+  const plans = pendingPlans();
+  if (!plans.length || target === dateKey(selected)) return;
+  for (const plan of plans) plan.date = target;
+  persist();
+  selected = date;
+  if (listDialog.open) listDialog.close();
+  if (moveDialog.open) moveDialog.close();
+  render();
+  animateCalendarChange();
+  byId('move-status').textContent = '미완료 할 일 ' + plans.length + '개를 ' + formattedDate(date) + '로 옮겼어요.';
+  byId('list-menu').focus({ preventScroll: true });
+}
+
+function renderMoveCalendar() {
+  const year = moveMonth.getFullYear();
+  const month = moveMonth.getMonth();
+  const source = dateKey(selected);
+  const days = weekdays.map(day => element('span', '', day));
+  for (let index = 0; index < moveMonth.getDay(); index++) days.push(element('span', ''));
+  const count = new Date(year, month + 1, 0).getDate();
+  for (let day = 1; day <= count; day++) {
+    const date = new Date(year, month, day, 12);
+    const key = dateKey(date);
+    const button = element('button', '', day);
+    button.type = 'button';
+    button.disabled = key === source;
+    button.setAttribute('aria-label', formattedDate(date));
+    button.setAttribute('aria-pressed', String(key === destination));
+    button.onclick = () => {
+      byId('move-days').querySelector('[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
+      destination = key;
+      button.setAttribute('aria-pressed', 'true');
+      byId('confirm-move').disabled = false;
+    };
+    days.push(button);
+  }
+  byId('move-month').textContent = year + '년 ' + (month + 1) + '월';
+  byId('move-days').replaceChildren(...days);
+}
+
+function changeMoveMonth(offset) {
+  moveMonth = new Date(moveMonth.getFullYear(), moveMonth.getMonth() + offset, 1);
+  renderMoveCalendar();
+}
+
+byId('list-menu').onclick = () => {
+  const today = new Date();
+  const count = pendingPlans().length;
+  const source = dateKey(selected);
+  byId('move-today').hidden = source === dateKey(today);
+  byId('move-today').disabled = !count;
+  byId('move-tomorrow').disabled = !count || source === dateKey(shift(today, 1));
+  byId('move-other').disabled = !count;
+  listDialog.showModal();
+};
+byId('close-list').onclick = () => listDialog.close();
+byId('move-today').onclick = () => movePendingPlans(new Date());
+byId('move-tomorrow').onclick = () => movePendingPlans(shift(new Date(), 1));
+byId('move-other').onclick = () => {
+  moveMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
+  destination = '';
+  byId('confirm-move').disabled = true;
+  renderMoveCalendar();
+  listDialog.close();
+  moveDialog.showModal();
+};
+byId('move-prev').onclick = () => changeMoveMonth(-1);
+byId('move-next').onclick = () => changeMoveMonth(1);
+byId('close-move').onclick = () => moveDialog.close();
+byId('cancel-move').onclick = () => moveDialog.close();
+byId('confirm-move').onclick = () => {
+  if (destination) movePendingPlans(new Date(destination + 'T12:00:00'));
+};
 render();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  const appVersion = '1.0.2';
+  const appVersion = '1.0.3';
   const workers = navigator.serviceWorker;
   let pendingVersion;
   let checking = false;
