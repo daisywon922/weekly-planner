@@ -75,7 +75,8 @@ nav { background: var(--surface); border: 1px solid var(--line); border-radius: 
 .day strong { font-size: .9375rem; color: var(--ink); margin-block: 1px; }
 .day[aria-current=date] { border-color: #a3b9cf; }
 .day[aria-pressed=true] { background: var(--soft); border-color: #87a7c5; color: #355e87; }
-.count { height: 13px; font-size: .6875rem; }
+.day-rate { height: 13px; font-size: .6875rem; font-variant-numeric: tabular-nums; }
+.day { grid-template-rows: auto auto 13px; }
 .content { padding: 10px var(--gutter) 0; }
 .progress { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; margin-bottom: 14px; color: var(--muted); font-size: .75rem; }
 progress { display: block; width: 100%; height: 4px; appearance: none; border: 0; border-radius: 4px; overflow: hidden; background: var(--line); accent-color: var(--accent); }
@@ -109,6 +110,13 @@ dialog::backdrop { background: #24364b63; }
 .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .dialog-head h2, #editor-title { font-size: 1.0625rem; letter-spacing: -.025em; }
 .dialog-head .icon { margin: -6px -6px -6px 0; }
+.dialog-head .icon:focus:not(:focus-visible) { outline: none; }
+#form .dialog-head { margin-bottom: 0; }
+.date-control { position: relative; display: flex; align-items: center; }
+.date-control input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.date-control input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: auto; height: auto; cursor: pointer; }
+.date-value { display: flex; align-items: center; width: 100%; height: 44px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-size: .875rem; font-weight: 400; white-space: nowrap; }
+.date-control:focus-within .date-value { outline: 2px solid var(--accent); outline-offset: 2px; }
 form { display: grid; gap: 12px; }
 form label, .field { min-width: 0; display: grid; grid-template-rows: 18px 44px; gap: 4px; }
 form label { color: var(--muted); font-size: .8125rem; font-weight: 600; line-height: 18px; }
@@ -140,6 +148,7 @@ input[type=color] { padding: 5px; }
 .category-row { display: flex; align-items: center; gap: 6px; min-height: 49px; border-bottom: 1px solid var(--line); }
 .category-row .tag { margin-right: auto; max-width: none; }
 .category-row button { font-size: .8125rem; }
+.category-edit { min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: var(--accent); }
 .wheel-title, .wheels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); text-align: center; }
 .wheel-title { font-size: .75rem; color: var(--muted); margin-top: 12px; }
 .wheels { position: relative; }
@@ -207,10 +216,10 @@ input[type=color] { padding: 5px; }
 </main>
 <dialog id="editor" aria-labelledby="editor-title">
   <form id="form">
-    <h2 id="editor-title">일정 추가</h2>
-    <label>일정 이름<input id="title" required maxlength="80" placeholder="예: 영어 회화 복습" autofocus></label>
+    <div class="dialog-head"><h2 id="editor-title" tabindex="-1" autofocus>일정 추가</h2><button class="icon" id="close-editor" type="button" aria-label="닫기">×</button></div>
+    <label>일정 이름<input id="title" required maxlength="80" placeholder="예: 영어 회화 복습"></label>
     <div class="fields">
-      <label>날짜<input id="date" type="date" required></label>
+      <label>날짜<span class="date-control"><span class="date-value" id="date-value" aria-hidden="true"></span><input id="date" type="date" required></span></label>
       <div class="field"><label for="pick-time">시간</label><button class="time-trigger" id="pick-time" type="button">시간 미정</button></div>
     </div>
     <label>카테고리<select id="category"></select></label>
@@ -219,15 +228,23 @@ input[type=color] { padding: 5px; }
   </form>
 </dialog>
 <dialog id="sidebar" aria-labelledby="sidebar-heading">
-  <div class="dialog-head"><h2 id="sidebar-heading">주간계획</h2><button class="icon" id="close-menu" type="button" aria-label="메뉴 닫기">×</button></div>
+  <div class="dialog-head"><h2 id="sidebar-heading" tabindex="-1" autofocus>주간계획</h2><button class="icon" id="close-menu" type="button" aria-label="메뉴 닫기">×</button></div>
   <div class="menu-items">
     <button class="secondary" id="manage-categories" type="button">카테고리 관리</button>
     <button class="secondary" id="show-updates" type="button">업데이트 내역</button>
   </div>
 </dialog>
 <dialog id="updates-dialog" aria-labelledby="updates-heading">
-  <div class="dialog-head"><h2 id="updates-heading">업데이트 내역</h2><button class="icon" id="close-updates" type="button" aria-label="닫기">×</button></div>
+  <div class="dialog-head"><h2 id="updates-heading" tabindex="-1" autofocus>업데이트 내역</h2><button class="icon" id="close-updates" type="button" aria-label="닫기">×</button></div>
   <div class="release-list">
+    <article class="release">
+      <div class="release-heading"><h3>1.0.1</h3><time datetime="2026-11-21">2026.11.21</time></div>
+      <ul>
+        <li>요일별 일정 달성률 표시</li>
+        <li>일정 날짜에 요일 표시, 편집창 닫기와 필드 정렬 개선</li>
+        <li>새 일정의 카테고리를 직접 선택하도록 변경</li>
+      </ul>
+    </article>
     <article class="release">
       <div class="release-heading"><h3>1.0.0</h3><time datetime="2026-11-21">2026.11.21</time></div>
       <ul>
@@ -240,7 +257,7 @@ input[type=color] { padding: 5px; }
   </div>
 </dialog>
 <dialog id="category-dialog" aria-labelledby="category-heading">
-  <div class="dialog-head"><h2 id="category-heading">카테고리 관리</h2><button class="icon" id="close-categories" type="button" aria-label="닫기">×</button></div>
+  <div class="dialog-head"><h2 id="category-heading" tabindex="-1" autofocus>카테고리 관리</h2><button class="icon" id="close-categories" type="button" aria-label="닫기">×</button></div>
   <ul class="category-list" id="category-list"></ul>
   <form id="category-form">
     <div class="color-fields"><label>이름<input id="category-name" required maxlength="18" placeholder="예: 운동"></label><label>칩 색상<input id="category-color" type="color" value="#eee7ff"></label></div>
@@ -248,7 +265,7 @@ input[type=color] { padding: 5px; }
   </form>
 </dialog>
 <dialog id="time-dialog" aria-labelledby="time-heading">
-  <div class="dialog-head"><h2 id="time-heading">시간 선택</h2><button class="icon" id="close-time" type="button" aria-label="닫기">×</button></div>
+  <div class="dialog-head"><h2 id="time-heading" tabindex="-1" autofocus>시간 선택</h2><button class="icon" id="close-time" type="button" aria-label="닫기">×</button></div>
   <div class="wheel-title" aria-hidden="true"><span>오전·오후</span><span>시</span><span>분</span></div>
   <div class="wheels" id="wheels"></div>
   <div class="actions wheel-actions"><button class="secondary" id="clear-time" type="button">시간 미정</button><button class="primary" id="confirm-time" type="button">확인</button></div>
@@ -273,6 +290,13 @@ function shift(date, offset) {
 }
 const monday = date => shift(date, -((date.getDay() + 6) % 7));
 const shortDate = date => (date.getMonth() + 1) + '.' + date.getDate();
+function formattedDate(date) {
+  return date.getFullYear() + '. ' + (date.getMonth() + 1) + '. ' + date.getDate() + ' (' + weekdays[date.getDay()] + ')';
+}
+function updateDateValue() {
+  const value = byId('date').value;
+  byId('date-value').textContent = value ? formattedDate(new Date(value + 'T12:00:00')) : '날짜 선택';
+}
 let selected = new Date();
 let editingId = null;
 let editingCategory = null;
@@ -338,20 +362,22 @@ function render() {
   byId('days').replaceChildren(...Array.from({ length: 7 }, (_, index) => {
     const day = shift(start, index);
     const key = dateKey(day);
-    const count = weekEntries.filter(entry => entry.date === key).length;
+    const plans = weekEntries.filter(entry => entry.date === key);
+    const rate = plans.length ? Math.round(plans.filter(entry => entry.done).length / plans.length * 100) + '%' : '';
     const button = element('button', 'day');
     button.type = 'button';
     button.setAttribute('aria-pressed', String(key === selectedKey));
-    button.setAttribute('aria-label', key + ' ' + weekdays[day.getDay()] + '요일, 일정 ' + count + '개');
+    button.setAttribute('aria-label', formattedDate(day) + (rate ? ', 달성률 ' + rate : ''));
     if (key === todayKey) button.setAttribute('aria-current', 'date');
-    button.append(element('span', '', weekdays[day.getDay()]), element('strong', '', day.getDate()), element('span', 'count', count ? count + '개' : ''));
+    button.append(element('span', '', weekdays[day.getDay()]), element('strong', '', day.getDate()));
+    if (rate) button.append(element('span', 'day-rate', rate));
     button.addEventListener('click', () => { selected = day; render(); byId('days').children[index].focus(); });
     return button;
   }));
   byId('progress').max = weekEntries.length || 1;
   byId('progress').value = completed;
   byId('tally').textContent = completed + ' / ' + weekEntries.length + ' 완료';
-  byId('selected').textContent = (selected.getMonth() + 1) + '월 ' + selected.getDate() + '일 ' + weekdays[selected.getDay()] + '요일';
+  byId('selected').textContent = formattedDate(selected);
   const dayEntries = weekEntries.filter(entry => entry.date === selectedKey)
     .sort((first, second) => (first.time || '99:99').localeCompare(second.time || '99:99'));
   byId('tasks').replaceChildren(...dayEntries.map(entry => {
@@ -385,9 +411,12 @@ function openEditor(entry) {
   byId('title').value = entry?.title ?? '';
   byId('title').setCustomValidity('');
   byId('date').value = entry?.date ?? dateKey(selected);
+  updateDateValue();
   setTime(entry?.time ?? '');
-  byId('category').replaceChildren(...[...categories.map(category => category.name), uncategorized].map(name => element('option', '', name)));
-  byId('category').value = entry?.category ?? categories[0]?.name ?? uncategorized;
+  const placeholder = element('option', '', '선택');
+  placeholder.value = '';
+  byId('category').replaceChildren(placeholder, ...categories.map(category => element('option', '', category.name)));
+  byId('category').value = entry?.category === uncategorized ? '' : entry?.category ?? '';
   byId('remove').hidden = !entry;
   editor.showModal();
 }
@@ -395,6 +424,8 @@ byId('prev').onclick = () => { selected = shift(selected, -7); render(); };
 byId('next').onclick = () => { selected = shift(selected, 7); render(); };
 byId('add').onclick = () => openEditor();
 byId('cancel').onclick = () => editor.close();
+byId('close-editor').onclick = () => editor.close();
+byId('date').oninput = updateDateValue;
 byId('title').oninput = () => byId('title').setCustomValidity('');
 byId('form').onsubmit = event => {
   event.preventDefault();
@@ -405,7 +436,7 @@ byId('form').onsubmit = event => {
     return;
   }
   const date = byId('date').value;
-  const details = { title, date, time: eventTime, category: byId('category').value };
+  const details = { title, date, time: eventTime, category: byId('category').value || uncategorized };
   const existing = entries.find(entry => entry.id === editingId);
   if (existing) Object.assign(existing, details);
   else entries.push({ id: String(Date.now()) + Math.random(), ...details, done: false });
@@ -444,7 +475,7 @@ function saveCategories() {
 function renderCategories() {
   byId('category-list').replaceChildren(...categories.map(category => {
     const row = element('li', 'category-row');
-    const edit = element('button', 'secondary', '수정');
+    const edit = element('button', 'category-edit', '수정');
     const remove = element('button', 'delete', '삭제');
     edit.setAttribute('aria-label', category.name + ' 수정');
     remove.setAttribute('aria-label', category.name + ' 삭제');
@@ -545,7 +576,7 @@ byId('pick-time').onclick = () => {
   byId('wheels').replaceChildren(...wheels.map(({ wheel }) => wheel));
   timeDialog.showModal();
   wheels.forEach(({ wheel, mark }, index) => { wheel.scrollTop = indices[index] * 44; mark(); });
-  byId('close-time').focus({ preventScroll: true });
+  byId('time-heading').focus({ preventScroll: true });
 };
 byId('close-time').onclick = () => timeDialog.close();
 byId('clear-time').onclick = () => { setTime(''); timeDialog.close(); };

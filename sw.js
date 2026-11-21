@@ -1,4 +1,4 @@
-const cacheName = 'weekly-planner-1.0.0';
+const cacheName = 'weekly-planner-1.0.1';
 const assets = [
   './index.html',
   './manifest.webmanifest',
