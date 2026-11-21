@@ -238,6 +238,13 @@ input[type=color] { padding: 5px; }
   <div class="dialog-head"><h2 id="updates-heading" tabindex="-1" autofocus>업데이트 내역</h2><button class="icon" id="close-updates" type="button" aria-label="닫기">×</button></div>
   <div class="release-list">
     <article class="release">
+      <div class="release-heading"><h3>1.0.2</h3><time datetime="2026-11-21">2026.11.21</time></div>
+      <ul>
+        <li>앱을 열거나 다시 돌아오면 새 버전을 자동 확인</li>
+        <li>일정 편집을 마친 뒤 새 버전을 적용하고 저장한 일정은 유지</li>
+      </ul>
+    </article>
+    <article class="release">
       <div class="release-heading"><h3>1.0.1</h3><time datetime="2026-11-21">2026.11.21</time></div>
       <ul>
         <li>요일별 일정 달성률 표시</li>
@@ -301,12 +308,14 @@ let selected = new Date();
 let editingId = null;
 let editingCategory = null;
 let eventTime = '';
+let storageUnavailable = false;
 let entries = [
   { id: 'sample-1', title: '영어 회화 복습', time: '19:30', category: '공부', done: true },
   { id: 'sample-2', title: '친구와 저녁 약속', time: '20:30', category: '약속', done: false },
   { id: 'sample-3', title: '다음 주 계획 정리', time: '21:00', category: '기타', done: false }
 ].map(entry => ({ ...entry, date: dateKey(selected) }));
 function storageWarning() {
+  storageUnavailable = true;
   byId('notice').hidden = false;
   byId('notice').textContent = '브라우저 저장 공간에 접근할 수 없어 새로고침하면 변경 사항이 사라질 수 있어요.';
 }
@@ -588,7 +597,62 @@ byId('confirm-time').onclick = () => {
 };
 render();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('./sw.js').catch(error => console.warn('앱 캐시 등록 실패', error));
+  const appVersion = '1.0.2';
+  const workers = navigator.serviceWorker;
+  let pendingVersion;
+  let checking = false;
+  let reloading = false;
+
+  function applyUpdate() {
+    if (!pendingVersion || reloading || storageUnavailable || document.visibilityState !== 'visible' ||
+      document.querySelector('dialog[open]')) return;
+    const lastReload = history.state?.weeklyPlannerUpdate;
+    if (lastReload?.version === pendingVersion && Date.now() - lastReload.at < 30000) return;
+    history.replaceState({
+      ...history.state,
+      weeklyPlannerUpdate: { version: pendingVersion, at: Date.now() }
+    }, '');
+    reloading = true;
+    location.reload();
+  }
+
+  function requestVersion() {
+    workers.controller?.postMessage({ type: 'GET_APP_VERSION' });
+  }
+
+  workers.addEventListener('message', event => {
+    if (event.source !== workers.controller || event.data?.type !== 'APP_VERSION' ||
+      typeof event.data.version !== 'string') return;
+    if (event.data.version.localeCompare(appVersion, 'en', { numeric: true }) > 0) {
+      pendingVersion = event.data.version;
+      applyUpdate();
+    }
+  });
+  workers.addEventListener('controllerchange', requestVersion);
+  for (const dialog of document.querySelectorAll('dialog')) {
+    dialog.addEventListener('close', applyUpdate);
+  }
+  const registration = workers.register('./sw.js', { updateViaCache: 'none' })
+    .catch(error => console.warn('앱 캐시 등록 실패', error));
+
+  async function checkForUpdate() {
+    if (checking || document.visibilityState !== 'visible') return;
+    checking = true;
+    try {
+      await (await registration)?.update();
+    } catch {
+      // The next foreground event retries if the network was unavailable.
+    } finally {
+      checking = false;
+      requestVersion();
+      applyUpdate();
+    }
+  }
+  document.addEventListener('visibilitychange', checkForUpdate);
+  window.addEventListener('pageshow', checkForUpdate);
+  window.addEventListener('focus', checkForUpdate);
+  window.addEventListener('online', checkForUpdate);
+  checkForUpdate();
 }
 </script>
 </body>
